@@ -1,0 +1,11 @@
+[package]
+name = "in_memory_trading_sys_rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cargo = "0.83.0"
+install = "0.0.0"
+ulid = "0.3.3"

@@ -572,6 +572,29 @@ impl LimitOrderBook {
 }
 
 
+/*
+We are going to Design a optimized and scalable trading system,
+which would be lock free to get rid off of lot of problem it brings like deadlock, slow down process etc
+
+Main Feature -
+  It should Handle new Order
+  User Should able to support both update and cancel order
+  We should have a snapshot job running frequently to handle cases to store the state of system frequently
+  We should store statisitics  of system , may be day wise but for now just thinking to store aggregated
+  Order Execution should be parllel
+  Transaction path operation like order matching should be O(1) time compleixity only
+
+
+Proposed Design
+
+  PriceLevel - > {price, #order at this price, [orders], stats}
+  Order -> {type , id, quantity, side, timestamp, time_to_stop/ force}
+  OrderBook - {symbol, bids -{price_level, PriceLevel}, asks {price_level, PriceLevel}}
+  TradeSystem - {symbol , Orderbook}
+
+
+ */
+
 
 fn main() {
     println!("Hello, world!");

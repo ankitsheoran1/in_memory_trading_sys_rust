@@ -56,12 +56,10 @@ impl Snapshot {
         } else {
             eprintln!("Error opening file");
         }
-
-
     }
 
-    pub fn to_string(&self) -> String {
-        self.to_json_string()
+    pub fn to_string(&self) -> Result<String, OrderError> {
+        Ok(self.to_json_string())
     }
 
     fn to_json_string(&self) -> String {
@@ -92,26 +90,26 @@ impl Snapshot {
         json
     }
 
-    pub fn to_compact_json(&self) -> String {
-        let mut json = String::new();
-        json.push('{');
-
-        json.push_str(&format!("\"price\":{},", self.price));
-        json.push_str(&format!("\"quantity\":{},", self.quantity));
-        json.push_str(&format!("\"order_count\":{},", self.order_count));
-        json.push_str(&format!("\"force_push\":{},", self.force_push));
-
-        json.push_str("\"orders\":[");
-        for (i, order) in self.orders.iter().enumerate() {
-            json.push_str(&self.order_to_compact_json_string(order));
-            if i < self.orders.len() - 1 {
-                json.push(',');
-            }
-        }
-        json.push_str("]}");
-
-        json
-    }
+    // pub fn to_compact_json(&self) -> String {
+    //     let mut json = String::new();
+    //     json.push('{');
+    //
+    //     json.push_str(&format!("\"price\":{},", self.price));
+    //     json.push_str(&format!("\"quantity\":{},", self.quantity));
+    //     json.push_str(&format!("\"order_count\":{},", self.order_count));
+    //     json.push_str(&format!("\"force_push\":{},", self.force_push));
+    //
+    //     json.push_str("\"orders\":[");
+    //     for (i, order) in self.orders.iter().enumerate() {
+    //         json.push_str(&self.order_to_compact_json_string(order));
+    //         if i < self.orders.len() - 1 {
+    //             json.push(',');
+    //         }
+    //     }
+    //     json.push_str("]}");
+    //
+    //     json
+    // }
 
     fn order_to_json_string(&self, order: &Arc<OrderType>) -> String {
         // This is a placeholder implementation since OrderType structure isn't provided
@@ -207,6 +205,31 @@ impl FromStr for Snapshot {
             force_push,
         })
     }
+}
+
+#[cfg(test)]
+mod tests{
+
+    use super::*;
+
+    #[test]
+    fn test_snapshot_to_string() {
+        let snapshot = Snapshot::new(100);
+        let json_str = snapshot.to_string().unwrap();
+        println!("Snapshot JSON:\n{}", json_str);
+    }
+
+    #[test]
+    fn test_file_operations() {
+        let snapshot = Snapshot::new(100);
+
+        snapshot.persist();
+        let snapshot = Snapshot::new(101);
+        snapshot.persist();
+    }
+
+
+
 }
 
 

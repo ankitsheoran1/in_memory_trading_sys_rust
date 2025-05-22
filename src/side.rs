@@ -1,4 +1,5 @@
-
+use serde::{Serialize, Deserialize};
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Side {
 
     #[serde(alias= "BUY", alias="buy", alias="Buy")]

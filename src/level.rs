@@ -10,6 +10,5 @@ pub struct PriceLevel {
     quantity: AtomicU64,
 
     orders: OrderQueue
-
-
 }
+

@@ -10,5 +10,6 @@ pub enum OrderError {
         field: String,
         value: String,
     },
+    MissingField(String),
     InvalidOperation(String)
 }

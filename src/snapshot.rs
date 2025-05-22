@@ -2,6 +2,9 @@ use std::str::FromStr;
 use std::sync::Arc;
 use crate::order_error::OrderError;
 use crate::order_type::OrderType;
+use chrono::Local;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 pub struct Snapshot {
 
@@ -38,7 +41,107 @@ impl Snapshot {
     }
 
     fn persist(&self) {
+        let date = Local::now().format("%Y-%m-%d").to_string();
+        let filename = format!("snapshot_{}.json",
+                               date);
+        let mut file = OpenOptions::new().create(true).append(true).open(filename);
+        if let Ok(mut file) = file {
+            if let Ok(json) = self.to_string() {
+                if let Err(e) = writeln!(file, "{}", json) {
+                    eprintln!("Error writing to file: {}", e);
+                }
+            } else {
+                eprintln!("Error serializing snapshot to JSON");
+            }
+        } else {
+            eprintln!("Error opening file");
+        }
 
+
+    }
+
+    pub fn to_string(&self) -> String {
+        self.to_json_string()
+    }
+
+    fn to_json_string(&self) -> String {
+        let mut json = String::new();
+        json.push_str("{\n");
+
+        // Add basic fields
+        json.push_str(&format!("  \"price\": {},\n", self.price));
+        json.push_str(&format!("  \"quantity\": {},\n", self.quantity));
+        json.push_str(&format!("  \"order_count\": {},\n", self.order_count));
+        json.push_str(&format!("  \"force_push\": {},\n", self.force_push));
+
+        // Add orders array
+        json.push_str("  \"orders\": [\n");
+        for (i, order) in self.orders.iter().enumerate() {
+            json.push_str("    ");
+            json.push_str(&self.order_to_json_string(order));
+
+            // Add comma if not the last element
+            if i < self.orders.len() - 1 {
+                json.push(',');
+            }
+            json.push('\n');
+        }
+        json.push_str("  ]\n");
+
+        json.push('}');
+        json
+    }
+
+    pub fn to_compact_json(&self) -> String {
+        let mut json = String::new();
+        json.push('{');
+
+        json.push_str(&format!("\"price\":{},", self.price));
+        json.push_str(&format!("\"quantity\":{},", self.quantity));
+        json.push_str(&format!("\"order_count\":{},", self.order_count));
+        json.push_str(&format!("\"force_push\":{},", self.force_push));
+
+        json.push_str("\"orders\":[");
+        for (i, order) in self.orders.iter().enumerate() {
+            json.push_str(&self.order_to_compact_json_string(order));
+            if i < self.orders.len() - 1 {
+                json.push(',');
+            }
+        }
+        json.push_str("]}");
+
+        json
+    }
+
+    fn order_to_json_string(&self, order: &Arc<OrderType>) -> String {
+        // This is a placeholder implementation since OrderType structure isn't provided
+        // You'll need to replace this with the actual OrderType fields
+        match order.as_ref() {
+            OrderType::MarketOrder {
+                id,
+                price,
+                quantity,
+                side,
+                timestamp,
+                time_in_force,
+            } =>
+                format!(
+                    "{{\"type\":\"MarketOrder\",\"id\":\"{}\",\"price\":{},\"quantity\":{},\"side\":\"{:?}\",\"timestamp\":{},\"time_in_force\":\"{:?}\"}}",
+                    id.0, price, quantity, side, timestamp, time_in_force
+                ),
+            OrderType::LimitOrder {
+                id,
+                price,
+                quantity,
+                side,
+                timestamp,
+                time_in_force,
+            } =>
+                format!(
+                    "{{\"type\":\"MarketOrder\",\"id\":\"{}\",\"price\":{},\"quantity\":{},\"side\":\"{:?}\",\"timestamp\":{},\"time_in_force\":\"{:?}\"}}",
+                    id.0, price, quantity, side, timestamp, time_in_force
+                )
+        }
     }
 }
 

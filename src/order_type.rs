@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::side::Side;
 use uuid::Uuid;
 use crate::order_error::OrderError;
+use crate::time_in_force::TimeInForce;
 
 pub enum OrderType {
 

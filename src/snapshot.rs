@@ -28,6 +28,23 @@ impl Snapshot {
         }
     }
 
+    fn reset(&mut self) {
+        self.quantity = 0;
+        self.order_count = 0;
+        self.orders= Vec::new();
+        self.force_push = false;
+    }
+
+    fn default() -> Self {
+        Self {
+            price: 0,
+            quantity: 0,
+            order_count: 0,
+            orders: Vec::new(),
+            force_push: false,
+        }
+    }
+
     pub fn add(&mut self, price: u64, order: Arc<OrderType>, last_order: bool) {
         self.orders.push(order);
         self.order_count += 1;
@@ -36,6 +53,8 @@ impl Snapshot {
 
         // if force // last_order push to disk
         if self.force_push || last_order {
+            self.persist();
+            *self = Self::default();
 
         }
     }

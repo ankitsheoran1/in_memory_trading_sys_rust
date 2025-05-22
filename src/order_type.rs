@@ -27,6 +27,44 @@ pub enum OrderType {
 
 }
 
+impl OrderType {
+    pub fn id(&self) -> OrderId {
+        match self {
+            Self::LimitOrder { id, .. } => *id,
+            Self::MarketOrder { id, .. } => *id,
+        }
+    }
+
+    pub fn price(&self) -> u64 {
+        match self {
+            Self::MarketOrder { price, ..} => *price,
+            Self::LimitOrder { price,..} => *price
+
+        }
+    }
+
+    pub fn quantity(&self) -> u64 {
+        match self {
+            Self::LimitOrder { quantity,..} => *quantity,
+            Self::MarketOrder { quantity, ..} => *quantity,
+        }
+    }
+
+    pub fn side(&self) -> Side {
+        match self {
+            Self::LimitOrder { side, ..} => *side,
+            Self::MarketOrder { side, ..} => *side
+        }
+    }
+
+    pub fn time_in_force(&self) -> TimeInForce {
+        match self {
+            Self::LimitOrder { time_in_force, ..} => *time_in_force,
+            Self::MarketOrder { time_in_force, ..} => *time_in_force,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct OrderId(pub Uuid);
 

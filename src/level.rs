@@ -1,4 +1,5 @@
 use std::sync::atomic::{AtomicU64, AtomicUsize};
+use crate::order_queue::OrderQueue;
 
 pub struct PriceLevel {
 
@@ -8,5 +9,7 @@ pub struct PriceLevel {
 
     quantity: AtomicU64,
 
-    orders: SegQueue<Arc<OrderType>>
+    orders: OrderQueue
+
+
 }

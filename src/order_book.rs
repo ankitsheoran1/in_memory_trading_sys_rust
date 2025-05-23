@@ -1,9 +1,9 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use cargo::core::resolver::HasDevUnits::No;
 use crate::side::Side;
 use dashmap::DashMap;
 use crate::level::PriceLevel;
+use crate::match_result::MatchResult;
 use crate::order_error::OrderError;
 use crate::order_type::{OrderId, OrderType};
 
@@ -134,7 +134,69 @@ impl OrderBook {
         None
     }
 
-    pub fn match_market_order(&self, orderId: OrderId, side: Side, quantity: u64) -> Result<MatchResult, OrderError>{
+    pub fn match_market_order(&self, order_id: OrderId, side: Side, quantity: u64) -> Result<MatchResult, OrderError>{
+            // get order details
+        let opposite_side = side.opposite();
+        let match_side = match opposite_side {
+            Side::Buy => &self.bids,
+            Side::Sell => &self.asks,
+        };
 
+        let mut remaining_quantity = quantity;
+        let mut match_result = MatchResult::new(order_id, quantity);
+        let mut filled_orders = Vec::new();
+
+        while remaining_quantity > 0 {
+            let best_price = match opposite_side {
+                Side::Buy => self.best_bid(),
+                Side::Sell => self.best_ask(),
+            };
+
+            if let Some(price) = best_price {
+                if let Some(level) = match_side.get_mut(&price) {
+                    let mut price_level = level.value();
+                    let matched_res = price_level.match_order(order_id, remaining_quantity);
+                    if !matched_res.transactions.is_empty() {
+                        self.last_trade_price.store(price, Ordering::SeqCst);
+                        self.has_traded.store(true, Ordering::SeqCst);
+                    }
+                    for transaction in matched_res.transactions {
+                        match_result.add_transaction(transaction);
+                    }
+                    for filled_order_id in matched_res.filled_order_ids {
+                        match_result.add_filled_order_id(*filled_order_id);
+                        filled_orders.push(filled_order_id);
+                    }
+                    remaining_quantity = matched_res.remaining_quantity;
+
+                    if price_level.order_count() == 0 {
+                        // We must drop the mutable reference before removing
+                        drop(level);
+                        match_side.remove(&price);
+                    }
+
+                    if remaining_quantity == 0 {
+                        break; // Order fully matched
+                    }
+                } else {  break; /* ignore this, it should never possible */}
+            } else {  break; /* ignore this, it should never possible */}
+
+        }
+
+        for order_id in filled_orders {
+            self.orders.remove(&order_id);
+        }
+
+        match_result.remaining_quantity = remaining_quantity;
+        match_result.is_complete = remaining_quantity == 0;
+
+        if match_result.transactions.is_empty() {
+            Err(OrderError::InsufficientLiquidity{
+                side,
+                requested: quantity,
+                available: 0,
+            })
+        }
+        Ok(match_result)
     }
 }

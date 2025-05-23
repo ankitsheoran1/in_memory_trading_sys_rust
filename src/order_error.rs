@@ -1,3 +1,4 @@
+use crate::side::Side;
 
 #[derive(Debug)]
 pub enum OrderError {
@@ -12,5 +13,13 @@ pub enum OrderError {
         value: String,
     },
     MissingField(String),
-    InvalidOperation(String)
+    InvalidOperation(String),
+    InsufficientLiquidity {
+        /// The side of the market order
+        side: Side,
+        /// Quantity requested
+        requested: u64,
+        /// Quantity available
+        available: u64,
+    },
 }

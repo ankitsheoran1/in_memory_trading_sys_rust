@@ -63,6 +63,74 @@ impl OrderType {
             Self::MarketOrder { time_in_force, ..} => *time_in_force,
         }
     }
+
+    /*
+      match incoming order with current order
+      // return quantity consumed of incoming
+      // order (current if updated)
+      // remaining quantity of current
+     */
+
+    pub fn  match_order(&self, incoming_qty: u64) -> ((u64, Option<Self>, u64)) {
+
+        match self {
+            OrderType::MarketOrder {
+                quantity,
+                id,
+                price,
+                side,
+                timestamp,
+                time_in_force
+            } => {
+                if incoming_qty < *quantity {
+
+                        (
+                        incoming_qty,
+                        Some(Self::MarketOrder {
+                                id: *id,
+                                price: *price,
+                                side: *side,
+                                timestamp: *timestamp,
+                                time_in_force: *time_in_force,
+                                quantity: *quantity - incoming_qty
+                            }),
+                        0,
+                        )
+                } else {
+                    (incoming_qty - *quantity, None, 0)
+                }
+            }
+            OrderType::LimitOrder {
+                quantity,
+                id,
+                price,
+                side,
+                timestamp,
+                time_in_force
+            } => {
+
+                let order = Self::MarketOrder {
+                    id: *id,
+                    price: *price,
+                    side: *side,
+                    timestamp: *timestamp,
+                    time_in_force: *time_in_force,
+                    quantity: *quantity - incoming_qty
+                };
+                if incoming_qty < *quantity {
+
+                        (
+                            incoming_qty,
+                            Some(order),
+                            0,
+                        )
+                } else {
+                    (incoming_qty - *quantity, None, 0)
+                }
+            }
+
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

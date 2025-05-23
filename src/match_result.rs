@@ -17,13 +17,13 @@ pub struct MatchResult {
 
 
 impl MatchResult {
-    pub fn new(order_id: OrderId, remaining_quantity: u64, transactions: Vec<Transaction>, is_complete: bool, filled_order_ids: Vec<OrderId>) -> Self {
+    pub fn new(order_id: OrderId, remaining_quantity: u64) -> Self {
         MatchResult {
             order_id,
             remaining_quantity,
-            transactions,
-            is_complete,
-            filled_order_ids,
+            transactions: Vec::new(),
+            is_complete: false,
+            filled_order_ids: Vec::new(),
         }
     }
 

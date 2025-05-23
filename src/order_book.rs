@@ -4,6 +4,7 @@ use cargo::core::resolver::HasDevUnits::No;
 use crate::side::Side;
 use dashmap::DashMap;
 use crate::level::PriceLevel;
+use crate::order_error::OrderError;
 use crate::order_type::{OrderId, OrderType};
 
 pub struct OrderBook {
@@ -129,16 +130,11 @@ impl OrderBook {
                     }
                 }
             }
-
-
-
         }
         None
     }
 
+    pub fn match_market_order(&self, orderId: OrderId, side: Side, quantity: u64) -> Result<MatchResult, OrderError>{
 
-
-
-
-
+    }
 }

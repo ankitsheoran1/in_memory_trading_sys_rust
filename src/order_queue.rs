@@ -23,4 +23,8 @@ impl OrderQueue {
         self.orders.pop()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.orders.is_empty()
+    }
+
 }

@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::sync::atomic::{AtomicU64, AtomicUsize};
 
 pub struct Stats {
@@ -29,6 +30,11 @@ impl Stats {
             sum_waiting_time: AtomicU64::new(0),
         }
     }
+
+    pub fn record_order_added(&self) {
+        self.order_added.fetch_add(1, Ordering::Relaxed);
+    }
+
 
 
 }

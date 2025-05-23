@@ -27,13 +27,27 @@ impl PriceLevel {
             orders: OrderQueue::new(),
             stats: Stats::new()
         }
-
     }
 
     pub fn add_order(&self, order: OrderType) {
         self.order_count.fetch_add(1, Ordering::SeqCst);
         self.quantity.fetch_add(order.quantity(), Ordering::SeqCst);
         self.orders.push(Arc::new(order));
+        self.stats.record_order_added();
+    }
+
+    pub fn get_order(&self) -> Vec<Arc<OrderType>> {
+        let mut data = Vec::new();
+        loop {
+            if self.orders.is_empty() {
+                break;
+            }
+            if let Some(order) = self.orders.pop() {
+                data.push(order);
+            }
+        }
+
+        data
     }
 }
 

@@ -191,7 +191,7 @@ impl OrderBook {
         match_result.is_complete = remaining_quantity == 0;
 
         if match_result.transactions.is_empty() {
-            Err(OrderError::InsufficientLiquidity{
+            return Err(OrderError::InsufficientLiquidity{
                 side,
                 requested: quantity,
                 available: 0,

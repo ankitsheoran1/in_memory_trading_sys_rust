@@ -48,6 +48,10 @@ impl MatchResult {
             .sum()
     }
 
+    pub fn executed_quantity(&self) -> u64 {
+        self.transactions.iter().map(|t| t.quantity).sum()
+    }
+
     pub fn average_price(&self) -> Option<f64> {
         let executed_qty = self.executed_quantity();
         if executed_qty == 0 {

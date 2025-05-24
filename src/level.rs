@@ -13,7 +13,7 @@ pub struct PriceLevel {
 
     price: u64,
 
-    order_count: AtomicUsize,
+    pub order_count: AtomicUsize,
 
     quantity: AtomicU64,
 
@@ -39,6 +39,11 @@ impl PriceLevel {
         self.quantity.fetch_add(order.quantity(), Ordering::SeqCst);
         self.orders.push(Arc::new(order));
         self.stats.record_order_added();
+    }
+
+
+    pub fn order_count(&self) -> usize {
+        self.order_count.load(Ordering::Acquire)
     }
 
     pub fn get_order(&self) -> Vec<Arc<OrderType>> {

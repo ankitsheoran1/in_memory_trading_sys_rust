@@ -119,16 +119,24 @@ impl OrderBook {
     }
 
     pub fn get_all_orders(&self) -> Vec<Arc<OrderType>> {
-       let mut bids = Vec::new();
+        let mut result = Vec::new();
+
+        // Get all bid orders
         for item in self.bids.iter() {
-            bids.push(item.value().get_order());
+            let price_level = item.value();
+
+            result.extend(price_level.get_order());
         }
 
-        let mut asks = Vec::new();
+        println!("=========={}=============", result.len());
+
+        // Get all ask orders
         for item in self.asks.iter() {
-            asks.push(item.value().get_order());
+            let price_level = item.value();
+            result.extend(price_level.get_order());
         }
-        bids.into_iter().chain(asks.into_iter()).flatten().collect()
+
+        result
     }
 
     pub fn get_order_by_id(&self, id: OrderId) -> Option<Arc<OrderType>> {
@@ -282,6 +290,29 @@ mod tests {
         assert!(fetched_order.is_some());
         assert_eq!(fetched_order.unwrap().id(), order_id);
     }
+
+    #[test]
+    fn test_add_multiple_bids() {
+        let book = OrderBook::new("BTCUSD");
+
+        // Add three buy orders at different prices
+        let _ = book.add_order(create_standard_order(1000, 10, Side::Buy));
+        let _ = book.add_order(create_standard_order(1010, 5, Side::Buy));
+        let _ = book.add_order(create_standard_order(990, 15, Side::Buy));
+
+        // Best bid should be the highest price
+        assert_eq!(book.best_bid(), Some(1010));
+
+        // Total orders at a specific price
+        let orders_at_1000 = book.get_orders_at_price(1000, Side::Buy);
+        assert_eq!(orders_at_1000.len(), 1);
+
+        // All orders in the book
+        let all_orders = book.get_all_orders();
+        assert_eq!(all_orders.len(), 3);
+    }
+
+
 
 
 

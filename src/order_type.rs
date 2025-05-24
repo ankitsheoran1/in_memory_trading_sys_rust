@@ -71,7 +71,7 @@ impl OrderType {
       // remaining quantity of current
      */
 
-    pub fn  match_order(&self, incoming_qty: u64) -> ((u64, Option<Self>, u64)) {
+    pub fn  match_order(&self, incoming_qty: u64) -> (u64, Option<Self>, u64) {
 
         match self {
             OrderType::MarketOrder {

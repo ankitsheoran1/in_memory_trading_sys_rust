@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use cargo::core::resolver::HasDevUnits::No;
@@ -30,6 +31,8 @@ impl OrderBook {
             market_close_timestamp: AtomicU64::new(0),
         }
     }
+
+
 
     pub fn symbol(&self) -> &str {
         &self.symbol
@@ -79,6 +82,23 @@ impl OrderBook {
             (Some(bid), Some(ask)) => Some(ask.saturating_sub(bid)),
             _ => None,
         }
+    }
+
+    pub fn add_order(&self, order: OrderType) -> Arc<OrderType> {
+        // Calculate quantities
+
+        // Update atomic counters
+
+        // Add to order queue
+        let order_arc = Arc::new(order);
+        self.orders.insert(order_arc.id(), (order_arc.price(), order_arc.side()));
+        let price_level = match order_arc.side() {
+            Side::Buy => self.bids.entry(order_arc.price()).or_insert_with(|| PriceLevel::new(order_arc.price())),
+            Side::Sell => self.asks.entry(order_arc.price()).or_insert_with(|| PriceLevel::new(order_arc.price())),
+        };
+        price_level.add_order(order_arc.clone());
+
+        order_arc
     }
 
     pub fn get_orders_at_price(&self, price: u64, side: Side) -> Vec<Arc<OrderType>> {
@@ -243,6 +263,8 @@ mod tests {
         assert_eq!(book.spread(), None);
         assert_eq!(book.last_trade_price(), None);
     }
+
+
 
 
 

@@ -34,10 +34,10 @@ impl PriceLevel {
         }
     }
 
-    pub fn add_order(&self, order: OrderType) {
+    pub fn add_order(&self, order: Arc<OrderType>) {
         self.order_count.fetch_add(1, Ordering::SeqCst);
         self.quantity.fetch_add(order.quantity(), Ordering::SeqCst);
-        self.orders.push(Arc::new(order));
+        self.orders.push(order);
         self.stats.record_order_added();
     }
 

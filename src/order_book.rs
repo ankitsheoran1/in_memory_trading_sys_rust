@@ -231,6 +231,19 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_new_order_book() {
+        let symbol = "BTCUSD";
+        let book = OrderBook::new(symbol);
+
+        assert_eq!(book.symbol(), symbol);
+        assert_eq!(book.best_bid(), None);
+        assert_eq!(book.best_ask(), None);
+        assert_eq!(book.mid_price(), None);
+        assert_eq!(book.spread(), None);
+        assert_eq!(book.last_trade_price(), None);
+    }
+
 
 
 }

@@ -264,6 +264,25 @@ mod tests {
         assert_eq!(book.last_trade_price(), None);
     }
 
+    #[test]
+    fn test_add_standard_order() {
+        let book = OrderBook::new("BTCUSD");
+        let order = create_standard_order(1000, 10, Side::Buy);
+        let order_id = order.id();
+
+        // Add the order
+        let result = book.add_order(order);
+        assert_eq!(result.price(), 1000);
+
+        // Verify order was added correctly
+        assert_eq!(book.best_bid(), Some(1000));
+
+        // Get the order by ID
+        let fetched_order = book.get_order_by_id(order_id);
+        assert!(fetched_order.is_some());
+        assert_eq!(fetched_order.unwrap().id(), order_id);
+    }
+
 
 
 

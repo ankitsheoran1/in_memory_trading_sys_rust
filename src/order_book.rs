@@ -126,10 +126,7 @@ impl OrderBook {
             let price_level = item.value();
 
             result.extend(price_level.get_order());
-            println!("==========order id is {} {}=============", price_level.price(), price_level.get_order().len());
         }
-
-        println!("=========={}=============", result.len());
 
         // Get all ask orders
         for item in self.asks.iter() {
@@ -312,11 +309,4 @@ mod tests {
         let all_orders = book.get_all_orders();
         assert_eq!(all_orders.len(), 3);
     }
-
-
-
-
-
-
-
 }

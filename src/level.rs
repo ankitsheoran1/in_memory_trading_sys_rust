@@ -46,18 +46,23 @@ impl PriceLevel {
         self.order_count.load(Ordering::Acquire)
     }
 
+    pub fn price(&self) -> u64 {
+        self.price
+    }
+
+
     pub fn get_order(&self) -> Vec<Arc<OrderType>> {
-        let mut data = Vec::new();
-        loop {
-            if self.orders.is_empty() {
-                break;
-            }
-            if let Some(order) = self.orders.pop() {
-                data.push(order);
-            }
+        let mut temp_storage = Vec::new();
+
+        while let Some(order) = self.orders.pop() {
+            temp_storage.push(order);
         }
 
-        data
+        for order in &temp_storage {
+            self.orders.push(order.clone());
+        }
+
+        temp_storage
     }
 
     pub fn match_order(&mut self, taker_oid: OrderId, quantity: u64) -> MatchResult {

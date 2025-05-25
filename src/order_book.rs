@@ -126,6 +126,7 @@ impl OrderBook {
             let price_level = item.value();
 
             result.extend(price_level.get_order());
+            println!("==========order id is {} {}=============", price_level.price(), price_level.get_order().len());
         }
 
         println!("=========={}=============", result.len());

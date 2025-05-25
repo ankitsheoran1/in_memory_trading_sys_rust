@@ -6,6 +6,7 @@ use crate::match_result::MatchResult;
 use crate::order_error::OrderError;
 use crate::order_queue::OrderQueue;
 use crate::order_type::{OrderId, OrderType};
+use crate::order_update::OrderUpdate;
 use crate::stats::Stats;
 use crate::transaction::Transaction;
 
@@ -106,6 +107,33 @@ impl PriceLevel {
             }
         }
         result
+    }
+
+    pub fn update_order(
+        &self,
+        update: OrderUpdate,
+    ) -> Result<Option<Arc<OrderType>>, OrderError> {
+        match update {
+            OrderUpdate::Cancel { order_id } => {
+                // Remove the order
+                let order = self.orders.remove(order_id);
+
+                if let Some(ref order_arc) = order {
+                    // Update atomic counters
+
+                    let qty = order_arc.quantity();
+                    self.quantity.fetch_sub(qty, Ordering::SeqCst);
+                    self.order_count.fetch_sub(1, Ordering::AcqRel);
+
+                    // TODO:: Update statistics
+                    // self.stats.record_order_removed();
+                }
+
+                Ok(order)
+            }
+        }
+
+
     }
 }
 

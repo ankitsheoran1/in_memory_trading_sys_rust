@@ -8,6 +8,7 @@ use crate::level::PriceLevel;
 use crate::match_result::MatchResult;
 use crate::order_error::OrderError;
 use crate::order_type::{OrderId, OrderType};
+use crate::order_update::OrderUpdate;
 
 pub struct OrderBook {
     symbol: String,
@@ -33,7 +34,6 @@ impl OrderBook {
     }
 
 
-
     pub fn symbol(&self) -> &str {
         &self.symbol
     }
@@ -41,7 +41,7 @@ impl OrderBook {
     pub fn best_bid(&self) -> Option<u64> {
         let mut price = None;
 
-        for item in self.bids.iter()  {
+        for item in self.bids.iter() {
             let key = *item.key();
             if price.is_none() || price.unwrap() < key {
                 price = Some(key)
@@ -53,7 +53,7 @@ impl OrderBook {
     pub fn best_ask(&self) -> Option<u64> {
         let mut price = None;
 
-        for item in self.asks.iter()  {
+        for item in self.asks.iter() {
             let key = *item.key();
             if price.is_none() || price.unwrap() > key {
                 price = Some(key)
@@ -65,7 +65,7 @@ impl OrderBook {
     pub fn mid_price(&self) -> Option<f64> {
         match ((self.best_bid(), self.best_ask())) {
             (Some(bid), Some(ask)) => Some((bid as f64 + ask as f64) / 2.0),
-            _=> None
+            _ => None
         }
     }
 
@@ -145,7 +145,7 @@ impl OrderBook {
                         if let Some(level) = self.asks.get(price) {
                             for order in level.get_order() {
                                 if order.id() == id {
-                                     return Some(order);
+                                    return Some(order);
                                 }
                             }
                         }
@@ -165,8 +165,8 @@ impl OrderBook {
         None
     }
 
-    pub fn match_market_order(&self, order_id: OrderId, side: Side, quantity: u64) -> Result<MatchResult, OrderError>{
-            // get order details
+    pub fn match_market_order(&self, order_id: OrderId, side: Side, quantity: u64) -> Result<MatchResult, OrderError> {
+        // get order details
         let opposite_side = side.opposite();
         let match_side = match opposite_side {
             Side::Buy => &self.bids,
@@ -209,9 +209,8 @@ impl OrderBook {
                     if remaining_quantity == 0 {
                         break; // Order fully matched
                     }
-                } else {  break; /* ignore this, it should never possible */}
-            } else {  break; /* ignore this, it should never possible */}
-
+                } else { break; /* ignore this, it should never possible */ }
+            } else { break; /* ignore this, it should never possible */ }
         }
 
         for order_id in filled_orders {
@@ -222,13 +221,45 @@ impl OrderBook {
         match_result.is_complete = remaining_quantity == 0;
 
         if match_result.transactions.is_empty() {
-            return Err(OrderError::InsufficientLiquidity{
+            return Err(OrderError::InsufficientLiquidity {
                 side,
                 requested: quantity,
                 available: 0,
             })
         }
         Ok(match_result)
+    }
+
+    pub fn cancel_order(&self, order_id: OrderId)
+                        -> Result<Option<Arc<OrderType>>, OrderError> {
+        let entry = self.orders.get(&order_id).map(|val| *val);
+        if let Some((price, side)) = entry {
+            let Some(level) = match side {
+                Side::Buy => self.bids.get_mut(&price),
+                Side::Sell => self.asks.get_mut(&price),
+            };
+            let update = OrderUpdate::Cancel { order_id };
+            let mut result = None;
+            let mut empty_level = false;
+            if let Ok(cancelled) = level.update_order(update) {
+                result = cancelled;
+                empty_level = level.order_count() == 0;
+            }
+
+            if result.is_some() {
+                self.orders.remove(&order_id);
+                if empty_level {
+                    match side {
+                        Side::Buy => self.bids.remove(&price),
+                        Side::Sell => self.asks.remove(&price),
+                    };
+                }
+            }
+
+            Ok(result)
+        } else {
+            Ok(None)
+        }
     }
 }
 

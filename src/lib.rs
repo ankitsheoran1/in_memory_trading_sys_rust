@@ -22,3 +22,5 @@ mod order_book;
 mod match_result;
 
 mod transaction;
+
+mod order_update;

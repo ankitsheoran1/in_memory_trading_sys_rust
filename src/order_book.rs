@@ -230,33 +230,72 @@ impl OrderBook {
         Ok(match_result)
     }
 
+    // pub fn cancel_order(&self, order_id: OrderId)
+    //                     -> Result<Option<Arc<OrderType>>, OrderError> {
+    //     let entry = self.orders.get(&order_id).map(|val| *val);
+    //     if let Some((price, side)) = entry {
+    //         let Some(level) = match side {
+    //             Side::Buy => self.bids.get_mut(&price),
+    //             Side::Sell => self.asks.get_mut(&price),
+    //         } else {
+    //             // Handle the case where the price level doesn't exist
+    //             return Ok(None);
+    //         };
+    //         let update = OrderUpdate::Cancel { order_id };
+    //         let mut result = None;
+    //         let mut empty_level = false;
+    //         if let Ok(cancelled) = level.update_order(update) {
+    //             result = cancelled;
+    //             empty_level = level.order_count() == 0;
+    //         }
+    //
+    //         if result.is_some() {
+    //             self.orders.remove(&order_id);
+    //             if empty_level {
+    //                 match side {
+    //                     Side::Buy => self.bids.remove(&price),
+    //                     Side::Sell => self.asks.remove(&price),
+    //                 };
+    //             }
+    //         }
+    //
+    //         Ok(result)
+    //     } else {
+    //         Ok(None)
+    //     }
+    // }
+
     pub fn cancel_order(&self, order_id: OrderId)
                         -> Result<Option<Arc<OrderType>>, OrderError> {
         let entry = self.orders.get(&order_id).map(|val| *val);
         if let Some((price, side)) = entry {
-            let Some(level) = match side {
+            if let Some(level) = match side {
                 Side::Buy => self.bids.get_mut(&price),
                 Side::Sell => self.asks.get_mut(&price),
-            };
-            let update = OrderUpdate::Cancel { order_id };
-            let mut result = None;
-            let mut empty_level = false;
-            if let Ok(cancelled) = level.update_order(update) {
-                result = cancelled;
-                empty_level = level.order_count() == 0;
-            }
-
-            if result.is_some() {
-                self.orders.remove(&order_id);
-                if empty_level {
-                    match side {
-                        Side::Buy => self.bids.remove(&price),
-                        Side::Sell => self.asks.remove(&price),
-                    };
+            } {
+                let update = OrderUpdate::Cancel { order_id };
+                let mut result = None;
+                let mut empty_level = false;
+                if let Ok(cancelled) = level.update_order(update) {
+                    result = cancelled;
+                    empty_level = level.order_count() == 0;
                 }
-            }
 
-            Ok(result)
+                if result.is_some() {
+                    self.orders.remove(&order_id);
+                    if empty_level {
+                        match side {
+                            Side::Buy => self.bids.remove(&price),
+                            Side::Sell => self.asks.remove(&price),
+                        };
+                    }
+                }
+
+                Ok(result)
+            } else {
+                // Price level doesn't exist
+                Ok(None)
+            }
         } else {
             Ok(None)
         }

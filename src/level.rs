@@ -113,6 +113,7 @@ impl PriceLevel {
         &self,
         update: OrderUpdate,
     ) -> Result<Option<Arc<OrderType>>, OrderError> {
+        println!("in update order function of level**************");
         match update {
             OrderUpdate::Cancel { order_id } => {
                 // Remove the order

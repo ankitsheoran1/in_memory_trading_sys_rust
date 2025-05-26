@@ -281,15 +281,36 @@ impl OrderBook {
                     empty_level = level.order_count() == 0;
                 }
 
+                println!(" ****************cance di=one ifrom level**********");
+
                 if result.is_some() {
+                    println!("About to remove order from orders");
                     self.orders.remove(&order_id);
-                    if empty_level {
-                        match side {
-                            Side::Buy => self.bids.remove(&price),
-                            Side::Sell => self.asks.remove(&price),
-                        };
-                    }
-                }
+                    println!("Order removed");
+                    // if empty_level {
+                    //     println!("Empty level, cleaning up price level");
+                    //     match side {
+                    //         Side::Buy => {
+                    //             println!("Removing from bids");
+                    //             self.bids.remove(&price);
+                    //         },
+                    //         Side::Sell => {
+                    //             println!("Removing from asks");
+                    //             self.asks.remove(&price);
+                    //         },
+                    //     };
+                    //     println!("Level cleanup done");
+                    //     // match side {
+                    //     //     Side::Buy => self.bids.remove(&price),
+                    //     //     Side::Sell => self.asks.remove(&price),
+                    //     // };
+                    // }
+                };
+
+                println!(" ****************bids asks updated**********");
+
+
+
 
                 Ok(result)
             } else {
@@ -402,12 +423,19 @@ mod tests {
         let order_id = order.id();
         let _ = book.add_order(order);
 
+        println!(" order added =============");
+
+
+
         // Check the order exists
         assert_eq!(book.best_bid(), Some(1000));
         assert!(book.get_order_by_id(order_id).is_some());
 
+        println!(" assertion 1 =============");
+
         // Cancel the order
         let result = book.cancel_order(order_id);
+        println!(" cancel done =============");
         assert!(result.is_ok());
 
         if let Ok(cancelled_order) = result {

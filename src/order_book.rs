@@ -340,4 +340,47 @@ mod tests {
         let all_orders = book.get_all_orders();
         assert_eq!(all_orders.len(), 3);
     }
+
+    #[test]
+    fn test_add_multiple_asks() {
+        let book = OrderBook::new("BTCUSD");
+
+        // Add three sell orders at different prices
+        let _ = book.add_order(create_standard_order(1050, 10, Side::Sell));
+        let _ = book.add_order(create_standard_order(1040, 5, Side::Sell));
+        let _ = book.add_order(create_standard_order(1060, 15, Side::Sell));
+
+        // Best ask should be the lowest price
+        assert_eq!(book.best_ask(), Some(1040));
+    }
+
+    #[test]
+    fn test_cancel_order() {
+        let book = OrderBook::new("BTCUSD");
+
+        // Add an order
+        let order = create_standard_order(1000, 10, Side::Buy);
+        let order_id = order.id();
+        let _ = book.add_order(order);
+
+        // Check the order exists
+        assert_eq!(book.best_bid(), Some(1000));
+        assert!(book.get_order_by_id(order_id).is_some());
+
+        // Cancel the order
+        let result = book.cancel_order(order_id);
+        assert!(result.is_ok());
+
+        if let Ok(cancelled_order) = result {
+            if cancelled_order.is_some() {
+                // Verify order is no longer in the book
+                assert_eq!(book.best_bid(), None);
+                assert!(book.get_order_by_id(order_id).is_none());
+            } else {
+                panic!("Failed to cancel the order");
+            }
+        } else {
+            panic!("Cancel operation failed");
+        }
+    }
 }

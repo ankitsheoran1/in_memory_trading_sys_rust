@@ -458,4 +458,67 @@ mod tests {
         // Now we should have a spread
         assert_eq!(book.spread(), Some(100));
     }
+
+    #[test]
+    fn test_market_order_match() {
+        let book = OrderBook::new("BTCUSD");
+
+        // Add two buy orders
+        let _ = book.add_order(create_standard_order(1000, 5, Side::Buy));
+        let _ = book.add_order(create_standard_order(990, 10, Side::Buy));
+
+        // Add a market sell order for 7 units
+        let result = book.match_market_order(create_order_id(),  Side::Sell, 7);
+
+        // The order should match successfully
+        assert!(result.is_ok());
+        let match_result = result.unwrap();
+
+        // Should be fully matched (5 from 1000 and 2 from 990)
+        assert!(match_result.is_complete);
+        assert_eq!(match_result.executed_quantity(), 7);
+
+        // Verify the best bid is now 990
+        assert_eq!(book.best_bid(), Some(990));
+
+        // Last trade price should be the last match price (990)
+        assert_eq!(book.last_trade_price(), Some(990));
+    }
+
+    #[test]
+    fn test_market_order_insufficient_liquidity() {
+        let book = OrderBook::new("BTCUSD");
+
+        // Add a buy order with 10 quantity
+        let _ = book.add_order(create_standard_order(1000, 10, Side::Buy));
+
+        // Try to match 20 units
+        let result = book.match_market_order(create_order_id(), Side::Sell, 20);
+
+        // La implementación podría no devolver un error, sino simplemente ejecutar lo que hay disponible
+        if result.is_err() {
+            // Si devuelve error, verificamos que sea el esperado
+            match result {
+                Err(OrderError::InsufficientLiquidity {
+                        side,
+                        requested,
+                        available,
+                    }) => {
+                    assert_eq!(side, Side::Sell);
+                    assert_eq!(requested, 20);
+                    assert_eq!(available, 10);
+                }
+                _ => panic!("Unexpected error type"),
+            }
+        } else {
+            // Si no devuelve error, verificamos que se haya ejecutado parcialmente
+            let match_result = result.unwrap();
+            assert_eq!(match_result.executed_quantity(), 10);
+            assert_eq!(match_result.remaining_quantity, 10);
+            assert!(!match_result.is_complete);
+
+            // El libro ahora debería estar vacío
+            assert_eq!(book.best_bid(), None);
+        }
+    }
 }

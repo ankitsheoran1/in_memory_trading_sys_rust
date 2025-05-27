@@ -311,6 +311,7 @@ impl OrderBook {
 mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
+    use crate::level;
     use crate::time_in_force::TimeInForce;
     use super::*;
 
@@ -426,5 +427,35 @@ mod tests {
         } else {
             panic!("Cancel operation failed");
         }
+    }
+
+    #[test]
+    fn test_cancel_nonexistent_order() {
+        let book = OrderBook::new("BTCUSD");
+        let result = book.cancel_order(create_order_id());
+
+        // Should not error, just return None
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_none());
+    }
+
+    #[test]
+    fn test_spread_calculation() {
+        let book = OrderBook::new("BTCUSD");
+
+        // No orders, no spread
+        assert_eq!(book.spread(), None);
+
+        // Add a bid
+        let _ = book.add_order(create_standard_order(1000, 10, Side::Buy));
+
+        // Just a bid, still no spread
+        assert_eq!(book.spread(), None);
+
+        // Add an ask
+        let _ = book.add_order(create_standard_order(1100, 10, Side::Sell));
+
+        // Now we should have a spread
+        assert_eq!(book.spread(), Some(100));
     }
 }

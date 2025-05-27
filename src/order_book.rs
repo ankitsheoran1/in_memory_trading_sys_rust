@@ -287,24 +287,26 @@ impl OrderBook {
                     println!("About to remove order from orders");
                     self.orders.remove(&order_id);
                     println!("Order removed");
-                    // if empty_level {
-                    //     println!("Empty level, cleaning up price level");
-                    //     match side {
-                    //         Side::Buy => {
-                    //             println!("Removing from bids");
-                    //             self.bids.remove(&price);
-                    //         },
-                    //         Side::Sell => {
-                    //             println!("Removing from asks");
-                    //             self.asks.remove(&price);
-                    //         },
-                    //     };
-                    //     println!("Level cleanup done");
-                    //     // match side {
-                    //     //     Side::Buy => self.bids.remove(&price),
-                    //     //     Side::Sell => self.asks.remove(&price),
-                    //     // };
-                    // }
+                    if empty_level {
+                        println!("Empty level, cleaning up price level");
+                        match side {
+                            Side::Buy => {
+                                drop(level);
+                                println!("Removing from bids");
+                                self.bids.remove(&price);
+                            },
+                            Side::Sell => {
+                                drop(level);
+                                println!("Removing from asks");
+                                self.asks.remove(&price);
+                            },
+                        };
+                        println!("Level cleanup done");
+                        // match side {
+                        //     Side::Buy => self.bids.remove(&price),
+                        //     Side::Sell => self.asks.remove(&price),
+                        // };
+                    }
                 };
 
                 println!(" ****************bids asks updated**********");
